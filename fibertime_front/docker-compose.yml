@@ -1,0 +1,63 @@
+services:
+  api:
+    container_name: fibertime_api_dev
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    command: npm run start:dev
+    ports:
+      - '3000:3000'
+    volumes:
+      - .:/app:delegated
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    env_file:
+      - .env.${APP_ENV:-dev}
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    networks:
+      - fibertime-network
+
+  postgres:
+    container_name: postgres_db
+    image: postgres:15-alpine
+    ports:
+      - '5432:5432'
+    environment:
+      - POSTGRES_DB=fibertime
+    env_file:
+      - .env.${APP_ENV:-dev}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - fibertime-network
+
+  redis:
+    image: redis:latest
+    container_name: fibertime_redis
+    ports:
+      - '6379:6379'
+    volumes:
+      - fibertime_redis:/data
+    networks:
+      - fibertime-network
+    restart: always
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+networks:
+  fibertime-network:
+    name: fibertime-network
+    driver: bridge
+
+volumes:
+  postgres_data:
+  fibertime_redis:

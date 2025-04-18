@@ -1,26 +1,45 @@
 import { Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { InjectModel } from '@nestjs/sequelize';
+import { User } from './user.model';
 
 @Injectable()
 export class UsersService {
+  constructor(@InjectModel(User) private userModel: typeof User) {}
+
   create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
+    return this.userModel.create(createUserDto as any);
   }
 
   findAll() {
-    return `This action returns all users`;
+    return this.userModel.findAll({
+      attributes: ['id', 'name', 'email', 'phone'],
+      where: { isActive: true },
+      order: [['name', 'ASC']],
+    });
   }
 
   findOne(id: number) {
-    return `This action returns a #${id} user`;
+    return this.userModel.findByPk(id, { where: { isActive: true } } as any);
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+  async update(id: number, updateUserDto: UpdateUserDto) {
+    const [affected, updatedUsers] = await this.userModel.update(
+      updateUserDto as any,
+      { where: { id, isActive: true }, returning: true },
+    );
+    return {
+      affected,
+      updatedUsers: updatedUsers[0],
+    };
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  async remove(id: number) {
+    const affected = await this.userModel.update(
+      { isActive: false },
+      { where: { id, isActive: true } },
+    );
+    return { affected };
   }
 }
