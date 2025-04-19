@@ -1,10 +1,19 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+import { ValidationPipe } from '@nestjs/common';
 
 declare const module: any;
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
   app.setGlobalPrefix('api/v1');
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true, // Strips properties not in the DTO
+      forbidNonWhitelisted: true, // Throws an error if extra properties are present
+      transform: true, // Transforms all properties to lowercase
+    }),
+  );
 
   await app.listen(process.env.PORT ?? 3000);
 

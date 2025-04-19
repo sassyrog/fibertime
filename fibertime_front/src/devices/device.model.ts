@@ -29,8 +29,8 @@ export class Device extends Model {
   @Column({ type: DataType.STRING(100), allowNull: true })
   declare name: string;
 
-  @Column({ type: DataType.STRING(4), allowNull: true })
-  declare pairingCode: string;
+  @Column({ type: DataType.STRING(100), unique: true })
+  declare deviceKey: string;
 
   @Column({
     type: DataType.ENUM('connected', 'expired', 'disconnected'),
@@ -38,7 +38,7 @@ export class Device extends Model {
   })
   declare connectionStatus: string;
 
-  @Column({ type: DataType.DATE, defaultValue: DataType.NOW, allowNull: true })
+  @Column({ type: DataType.DATE, allowNull: true })
   declare connectionExpiration: Date;
 
   @BelongsTo(() => User)

@@ -1,11 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { CreateDeviceDto } from './dto/create-device.dto';
 import { UpdateDeviceDto } from './dto/update-device.dto';
+import { Device } from './device.model';
+import { InjectModel } from '@nestjs/sequelize';
 
 @Injectable()
 export class DevicesService {
+  constructor(@InjectModel(Device) private deviceModel: typeof Device) {}
+
   create(createDeviceDto: CreateDeviceDto) {
-    return 'This action adds a new device';
+    return this.deviceModel.create(createDeviceDto as any);
   }
 
   findAll() {
@@ -16,11 +20,18 @@ export class DevicesService {
     return `This action returns a #${id} device`;
   }
 
-  update(id: number, updateDeviceDto: UpdateDeviceDto) {
-    return `This action updates a #${id} device`;
+  async update(id: string, updateDeviceDto: UpdateDeviceDto) {
+    const [affected, updatedDevices] = await this.deviceModel.update(
+      updateDeviceDto as any,
+      { where: { id }, returning: true },
+    );
+    return {
+      affected,
+      updatedDevices: updatedDevices[0],
+    };
   }
 
-  remove(id: number) {
+  remove(id: string) {
     return `This action removes a #${id} device`;
   }
 }

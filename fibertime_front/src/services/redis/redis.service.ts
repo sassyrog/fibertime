@@ -97,6 +97,16 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
+   * Get the remaining time to live of a key in seconds
+   * @param key Redis key to check the TTL for
+   * @returns A Promise that resolves to the TTL in seconds, or -2 if the key doesn't exist,
+   *          or -1 if the key exists but has no associated expiration time
+   */
+  async ttl(key: string): Promise<number | null> {
+    return this.redisClient.ttl(key);
+  }
+
+  /**
    * Set a hash field
    * @param key Redis key
    * @param field Hash field

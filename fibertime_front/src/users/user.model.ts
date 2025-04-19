@@ -9,7 +9,7 @@ export class User extends Model {
     defaultValue: DataType.UUIDV4,
   })
   declare id: string;
-  @Column({ type: DataType.STRING(100) })
+  @Column({ type: DataType.STRING(100), allowNull: true })
   declare name: string;
   @Column({ type: DataType.STRING(100), unique: true, allowNull: true })
   declare email: string;
@@ -17,7 +17,7 @@ export class User extends Model {
   declare phone: string;
   @Column({ type: DataType.BOOLEAN, defaultValue: true })
   declare isActive: boolean;
-  @Column({ type: DataType.DATE, defaultValue: DataType.NOW })
+  @Column({ type: DataType.DATE, allowNull: true })
   declare lastLogin: Date;
 
   @HasMany(() => Device)

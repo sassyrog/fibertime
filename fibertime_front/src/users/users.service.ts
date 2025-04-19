@@ -8,8 +8,8 @@ import { User } from './user.model';
 export class UsersService {
   constructor(@InjectModel(User) private userModel: typeof User) {}
 
-  create(createUserDto: CreateUserDto) {
-    return this.userModel.create(createUserDto as any);
+  async create(createUserDto: CreateUserDto) {
+    return await this.userModel.create(createUserDto as any);
   }
 
   findAll() {
@@ -24,7 +24,11 @@ export class UsersService {
     return this.userModel.findByPk(id, { where: { isActive: true } } as any);
   }
 
-  async update(id: number, updateUserDto: UpdateUserDto) {
+  async findByPhone(phone: string) {
+    return this.userModel.findOne({ where: { phone, isActive: true } } as any);
+  }
+
+  async update(id: string, updateUserDto: UpdateUserDto) {
     const [affected, updatedUsers] = await this.userModel.update(
       updateUserDto as any,
       { where: { id, isActive: true }, returning: true },
@@ -35,7 +39,7 @@ export class UsersService {
     };
   }
 
-  async remove(id: number) {
+  async remove(id: string) {
     const affected = await this.userModel.update(
       { isActive: false },
       { where: { id, isActive: true } },
