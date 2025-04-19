@@ -9,10 +9,11 @@ services:
     ports:
       - '3000:3000'
     volumes:
-      - .:/app:delegated
-      - /app/node_modules
+      - .:/app
+      - node_modules:/app/node_modules
     environment:
       - NODE_ENV=development
+      - PNPM_HOME=/app/.pnpm-store
     env_file:
       - .env.${APP_ENV:-dev}
     depends_on:
@@ -61,3 +62,4 @@ networks:
 volumes:
   postgres_data:
   fibertime_redis:
+  node_modules:
