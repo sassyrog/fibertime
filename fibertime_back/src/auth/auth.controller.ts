@@ -11,9 +11,9 @@ import { LoginDto, OtpDto } from './dto/auth.dto';
 import { RedisService } from 'src/services/redis/redis.service';
 import { SmsService } from 'src/services/sms/sms.service';
 import parsePhoneNumber from 'libphonenumber-js';
-import { sign } from 'jsonwebtoken';
-import { ConfigService } from '@nestjs/config';
 import { Throttle } from '@nestjs/throttler';
+import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 
 function normalizePhoneNumber(phone: string): string {
   const parsed = parsePhoneNumber(phone);
@@ -30,6 +30,7 @@ export class AuthController {
     private readonly redisService: RedisService,
     private readonly smsService: SmsService,
     private readonly configService: ConfigService,
+    private jwtService: JwtService,
   ) {}
 
   @Post('login')
@@ -65,13 +66,8 @@ export class AuthController {
       await this.redisService.del(otpKey);
       await this.usersService.update(user.id, { lastLogin: new Date() });
 
-      const jwtSecret = this.configService.get<string>('JWT_SECRET')!;
-
-      const payload: { userId: string } = { userId: user.id };
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-      const token: string = sign(payload, jwtSecret, {
-        expiresIn: '1h',
-      }) as string;
+      const payload = { userId: user.id, phone: user.phone };
+      const token: string = this.jwtService.sign(payload);
 
       return {
         message: 'Login successful',
@@ -114,10 +110,11 @@ export class AuthController {
       );
     }
 
+    const otpTtl = parseInt(this.configService.get<string>('OTP_TTL', '300'));
+
     const verification =
       await this.smsService.sendVerificationCode(phoneNumber);
-    await this.redisService.set(otpKey, JSON.stringify(verification), 60);
-    const otpTtl = await this.redisService.ttl(otpKey);
+    await this.redisService.set(otpKey, JSON.stringify(verification), otpTtl);
 
     return {
       ttl: otpTtl ?? 0 + 1, // account for check race condition

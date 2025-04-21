@@ -20,7 +20,7 @@ export class UsersService {
     });
   }
 
-  findOne(id: number) {
+  findOne(id: string) {
     return this.userModel.findByPk(id, { where: { isActive: true } } as any);
   }
 

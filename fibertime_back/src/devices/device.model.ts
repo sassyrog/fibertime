@@ -8,6 +8,13 @@ import {
 } from 'sequelize-typescript';
 import { User } from '../users/user.model';
 
+// define connection status enum\
+export enum ConnectionStatus {
+  Connected = 'connected',
+  Expired = 'expired',
+  Disconnected = 'disconnected',
+}
+
 @Table({ tableName: 'devices' })
 export class Device extends Model {
   @Column({
@@ -29,11 +36,15 @@ export class Device extends Model {
   @Column({ type: DataType.STRING(100), allowNull: true })
   declare name: string;
 
-  @Column({ type: DataType.STRING(100), unique: true })
+  @Column({ type: DataType.STRING(100) })
   declare deviceKey: string;
 
   @Column({
-    type: DataType.ENUM('connected', 'expired', 'disconnected'),
+    type: DataType.ENUM(
+      ConnectionStatus.Connected,
+      ConnectionStatus.Expired,
+      ConnectionStatus.Disconnected,
+    ),
     defaultValue: 'disconnected',
   })
   declare connectionStatus: string;

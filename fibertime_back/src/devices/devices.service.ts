@@ -16,8 +16,12 @@ export class DevicesService {
     return `This action returns all devices`;
   }
 
-  findOne(id: number) {
+  findOne(id: string) {
     return `This action returns a #${id} device`;
+  }
+
+  async findOneByDeviceKey(deviceKey: string) {
+    return this.deviceModel.findOne({ where: { deviceKey } } as any);
   }
 
   async update(id: string, updateDeviceDto: UpdateDeviceDto) {
