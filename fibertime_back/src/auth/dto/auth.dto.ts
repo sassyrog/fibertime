@@ -7,7 +7,7 @@ export class LoginDto {
 
   @IsNotEmpty()
   @IsString()
-  phone: string;
+  userId: string;
 }
 
 export class OtpDto {
@@ -15,4 +15,7 @@ export class OtpDto {
   @IsPhoneNumber('ZA')
   @IsString()
   phone: string;
+
+  @IsString()
+  code?: string;
 }

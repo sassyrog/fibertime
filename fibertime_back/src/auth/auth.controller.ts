@@ -10,13 +10,13 @@ import { UsersService } from 'src/users/users.service';
 import { LoginDto, OtpDto } from './dto/auth.dto';
 import { RedisService } from 'src/services/redis/redis.service';
 import { SmsService } from 'src/services/sms/sms.service';
-import parsePhoneNumber from 'libphonenumber-js';
+import parsePhoneNumber, { CountryCode } from 'libphonenumber-js';
 import { Throttle } from '@nestjs/throttler';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 
-function normalizePhoneNumber(phone: string): string {
-  const parsed = parsePhoneNumber(phone);
+function normalizePhoneNumber(phone: string, code: CountryCode | undefined = 'ZA'): string {
+  const parsed = parsePhoneNumber(phone, code);
   if (!parsed) {
     throw new HttpException('Invalid phone number', HttpStatus.BAD_REQUEST);
   }
@@ -31,18 +31,18 @@ export class AuthController {
     private readonly smsService: SmsService,
     private readonly configService: ConfigService,
     private jwtService: JwtService,
-  ) {}
+  ) { }
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @Throttle({ default: { limit: 3, ttl: 60000 } })
   async login(@Body() loginBody: LoginDto) {
-    const phoneNumber: string = normalizePhoneNumber(loginBody.phone);
 
-    const user = await this.usersService.findByPhone(phoneNumber);
+    const user = await this.usersService.findOne(loginBody.userId)
     if (!user) {
       throw new HttpException('User not found', HttpStatus.NOT_FOUND);
     }
+    const phoneNumber: string = normalizePhoneNumber(user.phone);
 
     const otpKey = `otp:${user.phone}`;
     const storedOtp: string | null = await this.redisService.get(otpKey);
@@ -110,7 +110,7 @@ export class AuthController {
       );
     }
 
-    const otpTtl = parseInt(this.configService.get<string>('OTP_TTL', '300'));
+    const otpTtl = parseInt(this.configService.get<string>('OTP_TTL', '45' /*300*/));
 
     const verification =
       await this.smsService.sendVerificationCode(phoneNumber);
